@@ -70,6 +70,24 @@ func CreateTrxWithoutSign(nodename string, version string, groupItem *quorumpb.G
 	return &trx, hashed, nil
 }
 
+func CreateTrx(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
+
+	if err != nil {
+		return trx, err
+	}
+	ks := localcrypto.GetKeystore()
+	keyname := groupItem.GroupId
+	signature, err := ks.SignByKeyName(keyname, hashed)
+	if err != nil {
+		return trx, err
+	}
+
+	trx.SenderSign = signature
+
+	return trx, nil
+}
+
 func UpdateTrxTimeLimit(trx *quorumpb.Trx) {
 	trx.TimeStamp = time.Now().UnixNano()
 	timein := time.Now().Local().Add(time.Hour*time.Duration(Hours) +
