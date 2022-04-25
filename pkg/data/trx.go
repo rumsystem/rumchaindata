@@ -17,6 +17,8 @@ const (
 	Sec   = 30
 )
 
+const OBJECT_SIZE_LIMIT = 200 * 1024 //(200Kb)
+
 func CreateTrxWithoutSign(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, []byte, error) {
 	var trx quorumpb.Trx
 
@@ -88,6 +90,7 @@ func CreateTrx(nodename string, version string, groupItem *quorumpb.GroupItem, m
 	return trx, nil
 }
 
+// set TimeStamp and Expired for trx
 func UpdateTrxTimeLimit(trx *quorumpb.Trx) {
 	trx.TimeStamp = time.Now().UnixNano()
 	timein := time.Now().Local().Add(time.Hour*time.Duration(Hours) +
