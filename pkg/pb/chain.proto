@@ -349,8 +349,8 @@ message NodeSDKGroupItem {
 	string GroupId                 = 1;
 	string GroupName               = 2;
 	string OwnerPubKey             = 3;
-    string UserSignKeyName         = 4;
-    string UserEncryptKeyName      = 5;
+    string SignAlias               = 4;
+    string EncryptAlias            = 5;
 	int64  LastUpdate              = 6;
 	int64  HighestHeight           = 7;
 	string HighestBlockId          = 8;
