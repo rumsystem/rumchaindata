@@ -346,20 +346,8 @@ message GroupSeed {
 }
 
 message NodeSDKGroupItem {
-	string GroupId                 = 1;
-	string GroupName               = 2;
-	string OwnerPubKey             = 3;
-    string SignAlias               = 4;
-    string EncryptAlias            = 5;
-	int64  LastUpdate              = 6;
-	int64  HighestHeight           = 7;
-	string HighestBlockId          = 8;
-	Block  GenesisBlock            = 9;
-    GroupEncryptType EncryptType   = 10;
-    GroupConsenseType ConsenseType = 11;
-    string CipherKey               = 12;
-    string AppKey                  = 13;
-    repeated string ApiUrl         = 14;
-    string GroupSeed               = 15;
+    GroupItem Group         = 1;  
+    repeated string ApiUrl  = 2;
+    string   GroupSeed      = 3;
 }
 
