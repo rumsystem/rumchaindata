@@ -346,8 +346,10 @@ message GroupSeed {
 }
 
 message NodeSDKGroupItem {
-    GroupItem Group         = 1;  
-    repeated string ApiUrl  = 2;
-    string   GroupSeed      = 3;
+    GroupItem Group         = 1;
+    string   EncryptAlias   = 2;
+    string   SignAlias      = 3;
+    repeated string ApiUrl  = 4;
+    string   GroupSeed      = 5;
 }
 
