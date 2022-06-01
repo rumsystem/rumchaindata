@@ -35,6 +35,14 @@ func (factory *TrxFactory) CreateTrx(msgType quorumpb.TrxType, data []byte, encr
 	return CreateTrx(factory.nodename, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
 }
 
+func (factory *TrxFactory) CreateTrxWithKeyAlias(keyalias string, msgType quorumpb.TrxType, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+	nonce, err := factory.chainNonce.GetNextNouce(factory.groupItem.GroupId, factory.nodename)
+	if err != nil {
+		return nil, err
+	}
+	return CreateTrxWithKeyAlias(factory.nodename, keyalias, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
+}
+
 func (factory *TrxFactory) GetUpdAppConfigTrx(item *quorumpb.AppConfigItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
@@ -158,4 +166,18 @@ func (factory *TrxFactory) GetPostAnyTrx(content proto.Message, encryptto ...[]s
 	}
 
 	return factory.CreateTrx(quorumpb.TrxType_POST, encodedcontent, encryptto...)
+}
+
+func (factory *TrxFactory) GetPostAnyTrxWithKeyAlias(keyalias string, content proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
+	encodedcontent, err := quorumpb.ContentToBytes(content)
+	if err != nil {
+		return nil, err
+	}
+
+	if binary.Size(encodedcontent) > OBJECT_SIZE_LIMIT {
+		err := errors.New("Content size over 200Kb")
+		return nil, err
+	}
+
+	return factory.CreateTrxWithKeyAlias(keyalias, quorumpb.TrxType_POST, encodedcontent, encryptto...)
 }
