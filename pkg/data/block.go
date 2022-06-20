@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey []byte, keystore localcrypto.Keystore, opts ...string) (*quorumpb.Block, error) {
+func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey []byte, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 	blockId := guuid.New()
 
@@ -44,17 +44,27 @@ func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey 
 
 	hash := localcrypto.Hash(bbytes)
 	newBlock.Hash = hash
-	signature, err := keystore.SignByKeyName(newBlock.GroupId, hash, opts...)
+
+	var signature []byte
+	if keyalias == "" {
+		signature, err = keystore.SignByKeyName(newBlock.GroupId, hash, opts...)
+	} else {
+		signature, err = keystore.SignByKeyAlias(keyalias, hash, opts...)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
+	if len(signature) == 0 {
+		return nil, errors.New("create signature on genesisblock failed")
+	}
 	newBlock.Signature = signature
 
 	return &newBlock, nil
 }
 
-func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystore localcrypto.Keystore) (*quorumpb.Block, error) {
+func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
 
 	encodedgroupPubkey, err := p2pcrypto.MarshalPublicKey(groupPublicKey)
 	if err != nil {
@@ -78,14 +88,59 @@ func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystor
 	hash := localcrypto.Hash(bbytes)
 	genesisBlock.Hash = hash
 
-	//signature, err := nodectx.GetNodeCtx().Keystore.SignByKeyName(genesisBlock.GroupId, hash)
-	signature, err := keystore.SignByKeyName(genesisBlock.GroupId, hash)
+	var signature []byte
+	if keyalias == "" {
+		signature, err = keystore.SignByKeyName(genesisBlock.GroupId, hash)
+	} else {
+		signature, err = keystore.SignByKeyAlias(keyalias, hash)
+	}
 	if err != nil {
 		return nil, err
+	}
+	if len(signature) == 0 {
+		return nil, errors.New("create signature on genesisblock failed")
 	}
 	genesisBlock.Signature = signature
 
 	return &genesisBlock, nil
+}
+
+func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
+
+	//deep copy newBlock by the protobuf. quorumpb.Block is a protobuf defined struct.
+	clonedblockbuff, err := proto.Marshal(block)
+	if err != nil {
+		return false, err
+	}
+	var blockWithoutHash *quorumpb.Block
+	blockWithoutHash = &quorumpb.Block{}
+
+	err = proto.Unmarshal(clonedblockbuff, blockWithoutHash)
+	if err != nil {
+		return false, err
+	}
+	blockWithoutHash.Hash = nil
+	blockWithoutHash.Signature = nil
+
+	bbytes, err := proto.Marshal(blockWithoutHash)
+	if err != nil {
+		return false, err
+	}
+
+	hash := localcrypto.Hash(bbytes)
+
+	//create pubkey
+	serializedpub, err := p2pcrypto.ConfigDecodeKey(block.ProducerPubKey)
+	if err != nil {
+		return false, err
+	}
+
+	pubkey, err := p2pcrypto.UnmarshalPublicKey(serializedpub)
+	if err != nil {
+		return false, err
+	}
+
+	return pubkey.Verify(hash, block.Signature)
 }
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
