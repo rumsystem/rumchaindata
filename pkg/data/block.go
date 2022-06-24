@@ -65,7 +65,6 @@ func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey 
 }
 
 func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
-
 	encodedgroupPubkey, err := p2pcrypto.MarshalPublicKey(groupPublicKey)
 	if err != nil {
 		return nil, err
@@ -105,30 +104,35 @@ func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystor
 	return &genesisBlock, nil
 }
 
-func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
-
-	//deep copy newBlock by the protobuf. quorumpb.Block is a protobuf defined struct.
+func BlockHash(block *quorumpb.Block) ([]byte, error) {
 	clonedblockbuff, err := proto.Marshal(block)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	var blockWithoutHash *quorumpb.Block
 	blockWithoutHash = &quorumpb.Block{}
 
 	err = proto.Unmarshal(clonedblockbuff, blockWithoutHash)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	blockWithoutHash.Hash = nil
 	blockWithoutHash.Signature = nil
 
 	bbytes, err := proto.Marshal(blockWithoutHash)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	hash := localcrypto.Hash(bbytes)
+	return hash, nil
+}
 
+func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
+	hash, err := BlockHash(block)
+	if err != nil {
+		return false, err
+	}
 	//create pubkey
 	serializedpub, err := p2pcrypto.ConfigDecodeKey(block.ProducerPubKey)
 	if err != nil {
@@ -139,35 +143,15 @@ func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	return pubkey.Verify(hash, block.Signature)
 }
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
-	//deep copy newBlock by the protobuf. quorumpb.Block is a protobuf defined struct.
-	clonedblockbuff, err := proto.Marshal(newBlock)
+	hash, err := BlockHash(newBlock)
 	if err != nil {
 		return false, err
 	}
 
-	var blockWithoutHash *quorumpb.Block
-	blockWithoutHash = &quorumpb.Block{}
-
-	err = proto.Unmarshal(clonedblockbuff, blockWithoutHash)
-	if err != nil {
-		return false, err
-	}
-
-	//set hash to ""
-	blockWithoutHash.Hash = nil
-	blockWithoutHash.Signature = nil
-
-	bbytes, err := proto.Marshal(blockWithoutHash)
-	if err != nil {
-		return false, err
-	}
-
-	hash := localcrypto.Hash(bbytes)
 	if res := bytes.Compare(hash, newBlock.Hash); res != 0 {
 		return false, errors.New("Hash for new block is invalid")
 	}
