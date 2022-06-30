@@ -167,19 +167,3 @@ func (factory *TrxFactory) GetPostAnyTrx(keyalias string, content proto.Message,
 
 	return factory.CreateTrxByEthKey(quorumpb.TrxType_POST, encodedcontent, keyalias, encryptto...)
 }
-
-// func (factory *TrxFactory) GetPostAnyTrxWithKeyAlias(keyalias string, content
-// proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
-//	encodedcontent, err := quorumpb.ContentToBytes(content)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if binary.Size(encodedcontent) > OBJECT_SIZE_LIMIT {
-//		err := errors.New("Content size over 200Kb")
-//		return nil, err
-//	}
-//
-//	return factory.CreateTrxWithKeyAlias(keyalias, quorumpb.TrxType_POST,
-//encodedcontent, encryptto...)
-// }

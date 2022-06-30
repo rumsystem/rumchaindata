@@ -121,7 +121,7 @@ func BlockHash(block *quorumpb.Block) ([]byte, error) {
 	return hash, nil
 }
 
-func VerifyBlockSign(block *quorumpb.Block, ks localcrypto.Keystore) (bool, error) {
+func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	hash, err := BlockHash(block)
 	if err != nil {
 		return false, err
@@ -130,6 +130,7 @@ func VerifyBlockSign(block *quorumpb.Block, ks localcrypto.Keystore) (bool, erro
 	if err == nil { //try eth key
 		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
 		if err == nil {
+			ks := localcrypto.GetKeystore()
 			r := ks.EthVerifySign(hash, block.Signature, ethpubkey)
 			return r, nil
 		}
@@ -165,8 +166,7 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 	if newBlock.PrevBlockId != oldBlock.BlockId {
 		return false, errors.New("Previous BlockId mismatch")
 	}
-	ks := localcrypto.GetKeystore()
-	return VerifyBlockSign(newBlock, ks)
+	return VerifyBlockSign(newBlock)
 }
 
 //get all trx from the block list
