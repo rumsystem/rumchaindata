@@ -27,75 +27,75 @@ func (factory *TrxFactory) Init(version string, groupItem *quorumpb.GroupItem, n
 	factory.version = version
 }
 
-func (factory *TrxFactory) CreateTrx(msgType quorumpb.TrxType, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) CreateTrxByEthKey(msgType quorumpb.TrxType, data []byte, keyalias string, encryptto ...[]string) (*quorumpb.Trx, error) {
 	nonce, err := factory.chainNonce.GetNextNouce(factory.groupItem.GroupId, factory.nodename)
 	if err != nil {
 		return nil, err
 	}
-	return CreateTrx(factory.nodename, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, msgType, int64(nonce), data, keyalias, encryptto...)
 }
 
-func (factory *TrxFactory) CreateTrxWithKeyAlias(keyalias string, msgType quorumpb.TrxType, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-	nonce, err := factory.chainNonce.GetNextNouce(factory.groupItem.GroupId, factory.nodename)
-	if err != nil {
-		return nil, err
-	}
-	return CreateTrxWithKeyAlias(factory.nodename, keyalias, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
-}
+//func (factory *TrxFactory) CreateTrxWithKeyAlias(keyalias string, msgType quorumpb.TrxType, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+//	nonce, err := factory.chainNonce.GetNextNouce(factory.groupItem.GroupId, factory.nodename)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return CreateTrxWithKeyAlias(factory.nodename, keyalias, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
+//}
 
-func (factory *TrxFactory) GetUpdAppConfigTrx(item *quorumpb.AppConfigItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetUpdAppConfigTrx(keyalias string, item *quorumpb.AppConfigItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
 	}
 
-	return factory.CreateTrx(quorumpb.TrxType_APP_CONFIG, encodedcontent)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_APP_CONFIG, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetChainConfigTrx(item *quorumpb.ChainConfigItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetChainConfigTrx(keyalias string, item *quorumpb.ChainConfigItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
 	}
 
-	return factory.CreateTrx(quorumpb.TrxType_CHAIN_CONFIG, encodedcontent)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_CHAIN_CONFIG, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetRegProducerTrx(item *quorumpb.ProducerItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetRegProducerTrx(keyalias string, item *quorumpb.ProducerItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
 	}
-	return factory.CreateTrx(quorumpb.TrxType_PRODUCER, encodedcontent)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_PRODUCER, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetRegUserTrx(item *quorumpb.UserItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetRegUserTrx(keyalias string, item *quorumpb.UserItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
 	}
-	return factory.CreateTrx(quorumpb.TrxType_USER, encodedcontent)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_USER, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetAnnounceTrx(item *quorumpb.AnnounceItem) (*quorumpb.Trx, error) {
-	encodedcontent, err := proto.Marshal(item)
-	if err != nil {
-		return nil, err
-	}
-
-	return factory.CreateTrx(quorumpb.TrxType_ANNOUNCE, encodedcontent)
-}
-
-func (factory *TrxFactory) GetUpdSchemaTrx(item *quorumpb.SchemaItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetAnnounceTrx(keyalias string, item *quorumpb.AnnounceItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
 	}
 
-	return factory.CreateTrx(quorumpb.TrxType_SCHEMA, encodedcontent)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_ANNOUNCE, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetReqBlockRespTrx(requester string, block *quorumpb.Block, result quorumpb.ReqBlkResult) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetUpdSchemaTrx(keyalias string, item *quorumpb.SchemaItem) (*quorumpb.Trx, error) {
+	encodedcontent, err := proto.Marshal(item)
+	if err != nil {
+		return nil, err
+	}
+
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_SCHEMA, encodedcontent, keyalias)
+}
+
+func (factory *TrxFactory) GetReqBlockRespTrx(keyalias string, requester string, block *quorumpb.Block, result quorumpb.ReqBlkResult) (*quorumpb.Trx, error) {
 	var reqBlockRespItem quorumpb.ReqBlockResp
 	reqBlockRespItem.Result = result
 	reqBlockRespItem.ProviderPubkey = factory.groupItem.UserSignPubkey
@@ -115,10 +115,10 @@ func (factory *TrxFactory) GetReqBlockRespTrx(requester string, block *quorumpb.
 	}
 
 	//send ask next block trx out
-	return CreateTrx(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_RESP, int64(0), bItemBytes)
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_RESP, int64(0), bItemBytes, keyalias)
 }
 
-func (factory *TrxFactory) GetReqBlockForwardTrx(block *quorumpb.Block) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetReqBlockForwardTrx(keyalias string, block *quorumpb.Block) (*quorumpb.Trx, error) {
 	var reqBlockItem quorumpb.ReqBlock
 	reqBlockItem.BlockId = block.BlockId
 	reqBlockItem.GroupId = block.GroupId
@@ -129,10 +129,10 @@ func (factory *TrxFactory) GetReqBlockForwardTrx(block *quorumpb.Block) (*quorum
 		return nil, err
 	}
 
-	return CreateTrx(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_FORWARD, int64(0), bItemBytes)
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_FORWARD, int64(0), bItemBytes, keyalias)
 }
 
-func (factory *TrxFactory) GetReqBlockBackwardTrx(block *quorumpb.Block) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetReqBlockBackwardTrx(keyalias string, block *quorumpb.Block) (*quorumpb.Trx, error) {
 	var reqBlockItem quorumpb.ReqBlock
 	reqBlockItem.BlockId = block.BlockId
 	reqBlockItem.GroupId = block.GroupId
@@ -143,18 +143,18 @@ func (factory *TrxFactory) GetReqBlockBackwardTrx(block *quorumpb.Block) (*quoru
 		return nil, err
 	}
 
-	return CreateTrx(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_BACKWARD, int64(0), bItemBytes)
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_BACKWARD, int64(0), bItemBytes, keyalias)
 }
 
-func (factory *TrxFactory) GetBlockProducedTrx(blk *quorumpb.Block) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetBlockProducedTrx(keyalias string, blk *quorumpb.Block) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(blk)
 	if err != nil {
 		return nil, err
 	}
-	return CreateTrx(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_BLOCK_PRODUCED, int64(0), encodedcontent)
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_BLOCK_PRODUCED, int64(0), encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetPostAnyTrx(content proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetPostAnyTrx(keyalias string, content proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
 	encodedcontent, err := quorumpb.ContentToBytes(content)
 	if err != nil {
 		return nil, err
@@ -165,19 +165,21 @@ func (factory *TrxFactory) GetPostAnyTrx(content proto.Message, encryptto ...[]s
 		return nil, err
 	}
 
-	return factory.CreateTrx(quorumpb.TrxType_POST, encodedcontent, encryptto...)
+	return factory.CreateTrxByEthKey(quorumpb.TrxType_POST, encodedcontent, keyalias, encryptto...)
 }
 
-func (factory *TrxFactory) GetPostAnyTrxWithKeyAlias(keyalias string, content proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
-	encodedcontent, err := quorumpb.ContentToBytes(content)
-	if err != nil {
-		return nil, err
-	}
-
-	if binary.Size(encodedcontent) > OBJECT_SIZE_LIMIT {
-		err := errors.New("Content size over 200Kb")
-		return nil, err
-	}
-
-	return factory.CreateTrxWithKeyAlias(keyalias, quorumpb.TrxType_POST, encodedcontent, encryptto...)
-}
+// func (factory *TrxFactory) GetPostAnyTrxWithKeyAlias(keyalias string, content
+// proto.Message, encryptto ...[]string) (*quorumpb.Trx, error) {
+//	encodedcontent, err := quorumpb.ContentToBytes(content)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if binary.Size(encodedcontent) > OBJECT_SIZE_LIMIT {
+//		err := errors.New("Content size over 200Kb")
+//		return nil, err
+//	}
+//
+//	return factory.CreateTrxWithKeyAlias(keyalias, quorumpb.TrxType_POST,
+//encodedcontent, encryptto...)
+// }

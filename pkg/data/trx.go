@@ -1,8 +1,10 @@
 package data
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
@@ -72,40 +74,63 @@ func CreateTrxWithoutSign(nodename string, version string, groupItem *quorumpb.G
 	return &trx, hashed, nil
 }
 
-func CreateTrx(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
+//func CreateTrx(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+//	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
+//
+//	if err != nil {
+//		return trx, err
+//	}
+//	ks := localcrypto.GetKeystore()
+//	keyname := groupItem.GroupId
+//	signature, err := ks.SignByKeyName(keyname, hashed)
+//	if err != nil {
+//		return trx, err
+//	}
+//
+//	trx.SenderSign = signature
+//
+//	return trx, nil
+//}
+
+func CreateTrxByEthKey(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, keyalias string, encryptto ...[]string) (*quorumpb.Trx, error) {
+	trx, hash, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
 
 	if err != nil {
 		return trx, err
 	}
 	ks := localcrypto.GetKeystore()
-	keyname := groupItem.GroupId
-	signature, err := ks.SignByKeyName(keyname, hashed)
+	//signature, err := ks.SignByKeyName(keyname, hashed)
+	var signature []byte
+	if keyalias == "" {
+		keyname := groupItem.GroupId
+		signature, err = ks.EthSignByKeyName(keyname, hash)
+	} else {
+		signature, err = ks.EthSignByKeyAlias(keyalias, hash)
+	}
 	if err != nil {
 		return trx, err
 	}
-
 	trx.SenderSign = signature
-
 	return trx, nil
+
 }
 
-func CreateTrxWithKeyAlias(nodename string, keyalias string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
-
-	if err != nil {
-		return trx, err
-	}
-	ks := localcrypto.GetKeystore()
-	signature, err := ks.SignByKeyAlias(keyalias, hashed)
-	if err != nil {
-		return trx, err
-	}
-
-	trx.SenderSign = signature
-
-	return trx, nil
-}
+//func CreateTrxWithKeyAlias(nodename string, keyalias string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
+//	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
+//
+//	if err != nil {
+//		return trx, err
+//	}
+//	ks := localcrypto.GetKeystore()
+//	signature, err := ks.SignByKeyAlias(keyalias, hashed)
+//	if err != nil {
+//		return trx, err
+//	}
+//
+//	trx.SenderSign = signature
+//
+//	return trx, nil
+//}
 
 // set TimeStamp and Expired for trx
 func UpdateTrxTimeLimit(trx *quorumpb.Trx) {
@@ -133,8 +158,16 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	hashed := localcrypto.Hash(bytes)
+	hash := localcrypto.Hash(bytes)
+	ks := localcrypto.GetKeystore()
+	bytespubkey, err := base64.RawURLEncoding.DecodeString(trx.SenderPubkey)
+	if err == nil { //try eth key
+		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
+		if err == nil {
+			r := ks.EthVerifySign(hash, trx.SenderSign, ethpubkey)
+			return r, nil
+		}
+	}
 
 	//create pubkey
 	serializedpub, err := p2pcrypto.ConfigDecodeKey(trx.SenderPubkey)
@@ -147,6 +180,6 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 		return false, err
 	}
 
-	verify, err := pubkey.Verify(hashed, trx.SenderSign)
+	verify, err := pubkey.Verify(hash, trx.SenderSign)
 	return verify, err
 }
