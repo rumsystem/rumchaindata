@@ -74,24 +74,6 @@ func CreateTrxWithoutSign(nodename string, version string, groupItem *quorumpb.G
 	return &trx, hashed, nil
 }
 
-//func CreateTrx(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-//	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
-//
-//	if err != nil {
-//		return trx, err
-//	}
-//	ks := localcrypto.GetKeystore()
-//	keyname := groupItem.GroupId
-//	signature, err := ks.SignByKeyName(keyname, hashed)
-//	if err != nil {
-//		return trx, err
-//	}
-//
-//	trx.SenderSign = signature
-//
-//	return trx, nil
-//}
-
 func CreateTrxByEthKey(nodename string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, keyalias string, encryptto ...[]string) (*quorumpb.Trx, error) {
 	trx, hash, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
 
@@ -99,7 +81,6 @@ func CreateTrxByEthKey(nodename string, version string, groupItem *quorumpb.Grou
 		return trx, err
 	}
 	ks := localcrypto.GetKeystore()
-	//signature, err := ks.SignByKeyName(keyname, hashed)
 	var signature []byte
 	if keyalias == "" {
 		keyname := groupItem.GroupId
@@ -114,23 +95,6 @@ func CreateTrxByEthKey(nodename string, version string, groupItem *quorumpb.Grou
 	return trx, nil
 
 }
-
-//func CreateTrxWithKeyAlias(nodename string, keyalias string, version string, groupItem *quorumpb.GroupItem, msgType quorumpb.TrxType, nonce int64, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-//	trx, hashed, err := CreateTrxWithoutSign(nodename, version, groupItem, msgType, int64(nonce), data, encryptto...)
-//
-//	if err != nil {
-//		return trx, err
-//	}
-//	ks := localcrypto.GetKeystore()
-//	signature, err := ks.SignByKeyAlias(keyalias, hashed)
-//	if err != nil {
-//		return trx, err
-//	}
-//
-//	trx.SenderSign = signature
-//
-//	return trx, nil
-//}
 
 // set TimeStamp and Expired for trx
 func UpdateTrxTimeLimit(trx *quorumpb.Trx) {
@@ -168,7 +132,6 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 			return r, nil
 		}
 	}
-
 	//create pubkey
 	serializedpub, err := p2pcrypto.ConfigDecodeKey(trx.SenderPubkey)
 	if err != nil {
