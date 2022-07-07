@@ -140,7 +140,10 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 
 	pubkey, err := p2pcrypto.UnmarshalPublicKey(serializedpub)
 	if err != nil {
-		return false, err
+		pubkey, err = p2pcrypto.UnmarshalPublicKey(bytespubkey)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	verify, err := pubkey.Verify(hash, trx.SenderSign)

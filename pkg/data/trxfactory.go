@@ -35,14 +35,6 @@ func (factory *TrxFactory) CreateTrxByEthKey(msgType quorumpb.TrxType, data []by
 	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, msgType, int64(nonce), data, keyalias, encryptto...)
 }
 
-//func (factory *TrxFactory) CreateTrxWithKeyAlias(keyalias string, msgType quorumpb.TrxType, data []byte, encryptto ...[]string) (*quorumpb.Trx, error) {
-//	nonce, err := factory.chainNonce.GetNextNouce(factory.groupItem.GroupId, factory.nodename)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return CreateTrxWithKeyAlias(factory.nodename, keyalias, factory.version, factory.groupItem, msgType, int64(nonce), data, encryptto...)
-//}
-
 func (factory *TrxFactory) GetUpdAppConfigTrx(keyalias string, item *quorumpb.AppConfigItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
