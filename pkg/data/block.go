@@ -2,18 +2,19 @@ package data
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
-	"time"
-
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
-	//"github.com/rumsystem/quorum/internal/pkg/nodectx"
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
 	"google.golang.org/protobuf/proto"
+	//"strings"
+	"time"
 )
 
-func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey []byte, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
+func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey string, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 	blockId := guuid.New()
 
@@ -33,7 +34,7 @@ func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey 
 		}
 		newBlock.Trxs = append(newBlock.Trxs, trxclone)
 	}
-	newBlock.ProducerPubKey = p2pcrypto.ConfigEncodeKey(groupPublicKey)
+	newBlock.ProducerPubKey = groupPublicKey
 	newBlock.TimeStamp = time.Now().UnixNano()
 
 	bbytes, err := proto.Marshal(&newBlock)
@@ -47,9 +48,9 @@ func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey 
 
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.SignByKeyName(newBlock.GroupId, hash, opts...)
+		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, hash, opts...)
 	} else {
-		signature, err = keystore.SignByKeyAlias(keyalias, hash, opts...)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, hash, opts...)
 	}
 
 	if err != nil {
@@ -64,34 +65,26 @@ func CreateBlock(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey 
 	return &newBlock, nil
 }
 
-func CreateGenesisBlock(groupId string, groupPublicKey p2pcrypto.PubKey, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
-	encodedgroupPubkey, err := p2pcrypto.MarshalPublicKey(groupPublicKey)
-	if err != nil {
-		return nil, err
-	}
+func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
 	var genesisBlock quorumpb.Block
 	genesisBlock.BlockId = guuid.New().String()
 	genesisBlock.GroupId = groupId
 	genesisBlock.PrevBlockId = ""
 	genesisBlock.PreviousHash = nil
 	genesisBlock.TimeStamp = time.Now().UnixNano()
-
-	genesisBlock.ProducerPubKey = p2pcrypto.ConfigEncodeKey(encodedgroupPubkey)
+	genesisBlock.ProducerPubKey = groupPublicKey
 	genesisBlock.Trxs = nil
-
-	bbytes, err := proto.Marshal(&genesisBlock)
+	hash, err := BlockHash(&genesisBlock)
 	if err != nil {
 		return nil, err
 	}
-
-	hash := localcrypto.Hash(bbytes)
 	genesisBlock.Hash = hash
 
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.SignByKeyName(genesisBlock.GroupId, hash)
+		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, hash)
 	} else {
-		signature, err = keystore.SignByKeyAlias(keyalias, hash)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, hash)
 	}
 	if err != nil {
 		return nil, err
@@ -133,7 +126,17 @@ func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	//create pubkey
+	bytespubkey, err := base64.RawURLEncoding.DecodeString(block.ProducerPubKey)
+	if err == nil { //try eth key
+		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
+		if err == nil {
+			ks := localcrypto.GetKeystore()
+			r := ks.EthVerifySign(hash, block.Signature, ethpubkey)
+			return r, nil
+		}
+	}
+
+	//libp2p key for backward campatibility
 	serializedpub, err := p2pcrypto.ConfigDecodeKey(block.ProducerPubKey)
 	if err != nil {
 		return false, err
@@ -163,20 +166,7 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 	if newBlock.PrevBlockId != oldBlock.BlockId {
 		return false, errors.New("Previous BlockId mismatch")
 	}
-
-	//create pubkey
-	serializedpub, err := p2pcrypto.ConfigDecodeKey(newBlock.ProducerPubKey)
-	if err != nil {
-		return false, err
-	}
-
-	pubkey, err := p2pcrypto.UnmarshalPublicKey(serializedpub)
-	if err != nil {
-		return false, err
-	}
-
-	verify, err := pubkey.Verify(newBlock.Hash, newBlock.Signature)
-	return verify, err
+	return VerifyBlockSign(newBlock)
 }
 
 //get all trx from the block list
