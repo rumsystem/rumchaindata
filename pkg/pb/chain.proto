@@ -6,6 +6,7 @@ enum PackageType {
     TRX      = 0;
     BLOCK    = 1;
     SNAPSHOT = 2;
+    ACS      = 3;
 }
 
 message Package {
@@ -352,4 +353,63 @@ message NodeSDKGroupItem {
     repeated string ApiUrl  = 4;
     string   GroupSeed      = 5;
 }
+
+enum ACSMsgType {
+    AGREEMENT = 0;
+    BROADCAST = 1;
+}
+
+message ACSMsg {
+    ACSMsgType Type     = 1;
+    string     SenderId = 2;
+    bytes      Payload  = 3;
+}
+
+enum BroadcastMsgType {
+    PROOF_REQ = 0;
+    ECHO_REQ  = 1;
+    READY_REQ = 2;
+}
+
+message BroadcastMsg {
+    BroadcastMsgType Type    = 1;
+    bytes            Payload = 2;
+}
+
+message ProofReq {
+    bytes          RootHash = 1;
+    repeated bytes Proof    = 2;
+    int64          Index    = 3;
+    int64          Leaves   = 4;
+}
+
+message EchoReq {
+    ProofReq Req = 1;
+}
+
+message ReadyReq {
+    bytes RootHash = 1;
+}
+
+enum AgreementMsgType {
+    BVAL_REQ = 0;
+    AUX_REQ  = 1;
+}
+
+message AgreementMsg {
+    AgreementMsgType  Type    = 1;
+    int64             Epoch   = 2;
+    bytes             Payload = 3;
+}
+
+message BvalReq {
+    bool Value = 1;
+}
+
+message AuxReq {
+    bool Value = 1;
+}
+
+
+
 
