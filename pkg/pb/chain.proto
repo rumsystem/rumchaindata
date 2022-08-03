@@ -6,7 +6,7 @@ enum PackageType {
     TRX      = 0;
     BLOCK    = 1;
     SNAPSHOT = 2;
-    ACS      = 3;
+    HBB      = 3;
 }
 
 message Package {
@@ -54,30 +54,30 @@ enum TrxStroageType {
 }
 
 message Trx {
-  string  TrxId        = 1;
-  TrxType Type         = 2;    
-  string  GroupId      = 3;
-  bytes   Data         = 4; 
-  int64   TimeStamp    = 5;
-  string  Version      = 6;
-  int64   Expired      = 7;
-  int64   ResendCount  = 8;
-  int64   Nonce        = 9;
-  string  SenderPubkey = 10;  
-  bytes   SenderSign   = 11;
-  TrxStroageType StorageType = 12;
+    string  TrxId        = 1;
+    TrxType Type         = 2;    
+    string  GroupId      = 3;
+    bytes   Data         = 4; 
+    int64   TimeStamp    = 5;
+    string  Version      = 6;
+    int64   Expired      = 7;
+    int64   ResendCount  = 8;
+    int64   Nonce        = 9;
+    string  SenderPubkey = 10;  
+    bytes   SenderSign   = 11;
+    TrxStroageType StorageType = 12;
 }
 
 message Block {
     string   BlockId        = 1;
     string   GroupId        = 2;
-	string   PrevBlockId    = 3;       
-	bytes    PreviousHash   = 4;     
-	repeated Trx Trxs       = 5; 
+    string   PrevBlockId    = 3;       
+    bytes    PreviousHash   = 4;     
+    repeated Trx Trxs       = 5; 
     string   ProducerPubKey = 6;   
-	bytes    Hash           = 7;      
+    bytes    Hash           = 7;      
     bytes    Signature      = 8;
-	int64    TimeStamp      = 9; 
+    int64    TimeStamp      = 9; 
 }
 
 message Snapshot {
@@ -102,8 +102,8 @@ message SnapshotItem {
 }
 
 enum SnapShotItemType {
-	SNAPSHOT_APP_CONFIG   = 0;    //app_config item
-	SNAPSHOT_CHAIN_CONFIG = 1;    //chain_config item
+    SNAPSHOT_APP_CONFIG   = 0;    //app_config item
+    SNAPSHOT_CHAIN_CONFIG = 1;    //chain_config item
     SNAPSHOT_PRODUCER     = 2;    //producer item
     SNAPSHOT_USER         = 3;    //user item
     SNAPSHOT_ANNOUNCE     = 4;    //announce item
@@ -235,15 +235,15 @@ enum GroupConsenseType {
 }
 
 message GroupItem {
-	string GroupId                 = 1;
-	string GroupName               = 2;
-	string OwnerPubKey             = 3;
+    string GroupId                 = 1;
+    string GroupName               = 2;
+    string OwnerPubKey             = 3;
     string UserSignPubkey          = 4;
     string UserEncryptPubkey       = 5;
-	int64  LastUpdate              = 6;
-	int64  HighestHeight           = 7;
-	string HighestBlockId          = 8;
-	Block  GenesisBlock            = 9;
+    int64  LastUpdate              = 6;
+    int64  HighestHeight           = 7;
+    string HighestBlockId          = 8;
+    Block  GenesisBlock            = 9;
     GroupEncryptType EncryptType   = 10;
     GroupConsenseType ConsenseType = 11;
     string CipherKey               = 12;
@@ -354,15 +354,15 @@ message NodeSDKGroupItem {
     string   GroupSeed      = 5;
 }
 
-enum ACSMsgType {
+enum HBBMsgType {
     AGREEMENT = 0;
     BROADCAST = 1;
 }
 
-message ACSMsg {
-    ACSMsgType Type     = 1;
-    string     SenderId = 2;
-    bytes      Payload  = 3;
+message HBMsg {
+    string      MsgId   = 1;
+    HBBMsgType  MsgType = 2;
+    bytes       Payload = 3;
 }
 
 enum BroadcastMsgType {
@@ -393,8 +393,8 @@ message ReadyReq {
 }
 
 enum AgreementMsgType {
-    BVAL_REQ = 0;
-    AUX_REQ  = 1;
+    BVAL_REQ  = 0;
+    AUX_REQ   = 1;
 }
 
 message AgreementMsg {
@@ -411,7 +411,3 @@ message BvalReq {
 message AuxReq {
     bool Value = 1;
 }
-
-
-
-
