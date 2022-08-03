@@ -372,8 +372,9 @@ enum BroadcastMsgType {
 }
 
 message BroadcastMsg {
-    BroadcastMsgType Type    = 1;
-    bytes            Payload = 2;
+    BroadcastMsgType Type     = 1;
+    string           SenderId = 2;
+    bytes            Payload  = 3;
 }
 
 message ProofReq {
@@ -397,9 +398,10 @@ enum AgreementMsgType {
 }
 
 message AgreementMsg {
-    AgreementMsgType  Type    = 1;
-    int64             Epoch   = 2;
-    bytes             Payload = 3;
+    AgreementMsgType  Type     = 1;
+    string            SenderId = 2;
+    int64             Epoch    = 3;
+    bytes             Payload  = 4;
 }
 
 message BvalReq {
