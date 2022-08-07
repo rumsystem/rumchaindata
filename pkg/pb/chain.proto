@@ -366,35 +366,34 @@ message HBMsg {
 }
 
 enum BroadcastMsgType {
-    PROOF_REQ = 0;
-    READY_REQ = 1;
+    PROOF = 0;
+    READY = 1;
 }
 
 message BroadcastMsg {
     BroadcastMsgType Type         = 1;
-    string           SenderPubkey = 2;
-    bytes            Payload      = 3;
+    bytes            Payload      = 2;
 }
 
-message ProofReq {
-    bytes          RootHash     = 1;
-    repeated bytes Proof        = 2;
-    int64          Index        = 3;
-    int64          Leaves       = 4;
-    bytes          ProposerKey  = 5;
-    bytes          ProposerSign = 6;
+message Proof{
+    bytes          RootHash       = 1;
+    repeated bytes Proof          = 2;
+    int64          Index          = 3;
+    int64          Leaves         = 4;
+    bytes          ProposerPubkey = 5;
+    bytes          ProposerSign   = 6;
 }
 
-message ReadyReq {
+message Ready {
     bytes RootHash       = 1;
-    bytes ProposerPubkey = 2;
-    bytes ProposerSign   = 3;
-     
+    bytes ProoferPubkey  = 2;
+    bytes ProposerPubkey = 3;
+    bytes ProposerSign   = 4;
 }
 
 enum AgreementMsgType {
-    BVAL_REQ  = 0;
-    AUX_REQ   = 1;
+    BVAL  = 0;
+    AUX   = 1;
 }
 
 message AgreementMsg {
@@ -405,10 +404,10 @@ message AgreementMsg {
     bytes             Payload    = 5;
 }
 
-message BvalReq {
+message Bval {
     bool Value = 1;
 }
 
-message AuxReq {
+message Aux {
     bool Value = 1;
 }
