@@ -371,8 +371,9 @@ enum BroadcastMsgType {
 }
 
 message BroadcastMsg {
-    BroadcastMsgType Type         = 1;
-    bytes            Payload      = 2;
+    string           SenderPubke  = 1;
+    BroadcastMsgType Type         = 2;
+    bytes            Payload      = 3;
 }
 
 message Proof{
