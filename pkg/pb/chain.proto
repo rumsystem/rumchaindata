@@ -371,7 +371,7 @@ enum BroadcastMsgType {
 }
 
 message BroadcastMsg {
-    string           SenderPubke  = 1;
+    string           SenderPubkey = 1;
     BroadcastMsgType Type         = 2;
     bytes            Payload      = 3;
 }
