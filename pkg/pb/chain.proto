@@ -128,7 +128,7 @@ message BlockDbChunk {
 }
 
 message ReqBlock {
-	string BlockId = 1; //block id
+    string BlockId = 1; //block id
     string GroupId = 2; //group id
     string UserId  = 3; //requester
 }
@@ -158,8 +158,8 @@ message BlockProduced {
 }
 
 enum ReqBlkResult {
-	BLOCK_IN_TRX = 0;    //block data in trx
-	BLOCK_NOT_FOUND = 1; //block not found
+    BLOCK_IN_TRX = 0;    //block data in trx
+    BLOCK_NOT_FOUND = 1; //block not found
 }
 
 message ReqBlockResp {
@@ -173,9 +173,9 @@ message ReqBlockResp {
 
 message PostItem {
     string TrxId           = 1;
-	string PublisherPubkey = 2;
-	bytes  Content         = 3;
-	int64  TimeStamp       = 4;
+    string PublisherPubkey = 2;
+    bytes  Content         = 3;
+    int64  TimeStamp       = 4;
 }
 
 message ProducerItem {
@@ -293,16 +293,16 @@ message SetTrxAuthModeItem {
 }
 
 message GroupItemV0 {
-	string GroupId                 = 1;
-	string GroupName               = 2;
-	string OwnerPubKey             = 3;
+    string GroupId                 = 1;
+    string GroupName               = 2;
+    string OwnerPubKey             = 3;
     string UserSignPubkey          = 4;
     string UserEncryptPubkey       = 5;
     RoleV0 UserRole                = 6;
-	int64  LastUpdate              = 7;
-	int64  HighestHeight           = 8;
-	string HighestBlockId          = 9;
-	Block  GenesisBlock            = 10;
+    int64  LastUpdate              = 7;
+    int64  HighestHeight           = 8;
+    string HighestBlockId          = 9;
+    Block  GenesisBlock            = 10;
     GroupEncryptType EncryptType   = 11;
     GroupConsenseType ConsenseType = 12;
     string CipherKey               = 13;
@@ -335,15 +335,15 @@ message PSPing {
 }
 
 message GroupSeed {
-	Block  GenesisBlock = 1;
-	string GroupId  = 2;
-	string GroupName = 3;
-	string OwnerPubkey = 4;
-	string ConsensusType  = 5;
-	string EncryptionType = 6;
-	string CipherKey = 7;
-	string AppKey = 8;
-	string Signature = 9;
+    Block  GenesisBlock = 1;
+    string GroupId  = 2;
+    string GroupName = 3;
+    string OwnerPubkey = 4;
+    string ConsensusType  = 5;
+    string EncryptionType = 6;
+    string CipherKey = 7;
+    string AppKey = 8;
+    string Signature = 9;
 }
 
 message NodeSDKGroupItem {
@@ -368,6 +368,10 @@ message HBMsg {
 enum BroadcastMsgType {
     PROOF = 0;
     READY = 1;
+}
+
+message HBTrxBundle {
+    repeated Trx Trxs = 1;
 }
 
 message BroadcastMsg {
