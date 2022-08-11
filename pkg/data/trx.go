@@ -4,13 +4,14 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
 	"google.golang.org/protobuf/proto"
-	"time"
 )
 
 const (
@@ -88,6 +89,7 @@ func CreateTrxByEthKey(nodename string, version string, groupItem *quorumpb.Grou
 	} else {
 		signature, err = ks.EthSignByKeyAlias(keyalias, hash)
 	}
+
 	if err != nil {
 		return trx, err
 	}
@@ -124,7 +126,25 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 	}
 	hash := localcrypto.Hash(bytes)
 	ks := localcrypto.GetKeystore()
+
+	if len(trx.SenderPubkey) == 42 && trx.SenderPubkey[:2] == "0x" { //try 0x address
+		//try verify 0x address
+		sigpubkey, err := ethcrypto.SigToPub(hash, trx.SenderSign)
+		if err == nil {
+			r := ks.EthVerifySign(hash, trx.SenderSign, sigpubkey)
+			if r == true {
+				addressfrompubkey := ethcrypto.PubkeyToAddress(*sigpubkey).Hex()
+				if addressfrompubkey == trx.SenderPubkey {
+					return true, nil
+				} else {
+					return false, fmt.Errorf("sig not match with the 0x address")
+				}
+			}
+		}
+	}
+
 	bytespubkey, err := base64.RawURLEncoding.DecodeString(trx.SenderPubkey)
+
 	if err == nil { //try eth key
 		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
 		if err == nil {
