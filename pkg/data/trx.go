@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
@@ -130,7 +131,11 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 
 	if len(trx.SenderPubkey) == 42 && trx.SenderPubkey[:2] == "0x" { //try 0x address
 		//try verify 0x address
-		sigpubkey, err := ethcrypto.SigToPub(hash, trx.SenderSign)
+		sig := trx.SenderSign
+		if sig[crypto.RecoveryIDOffset] == 27 || sig[crypto.RecoveryIDOffset] == 28 {
+			sig[crypto.RecoveryIDOffset] -= 27
+		}
+		sigpubkey, err := ethcrypto.SigToPub(hash, sig)
 		if err == nil {
 			r := ks.EthVerifySign(hash, trx.SenderSign, sigpubkey)
 			if r == true {
