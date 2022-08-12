@@ -377,7 +377,8 @@ message HBTrxBundle {
 message BroadcastMsg {
     string           SenderPubkey = 1;
     BroadcastMsgType Type         = 2;
-    bytes            Payload      = 3;
+    int64            Epoch        = 3;
+    bytes            Payload      = 4;
 }
 
 message Proof{
