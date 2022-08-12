@@ -241,7 +241,7 @@ message GroupItem {
     string UserSignPubkey          = 4;
     string UserEncryptPubkey       = 5;
     int64  LastUpdate              = 6;
-    int64  HighestHeight           = 7;
+    int64  Epoch                   = 7;
     string HighestBlockId          = 8;
     Block  GenesisBlock            = 9;
     GroupEncryptType EncryptType   = 10;
@@ -300,7 +300,7 @@ message GroupItemV0 {
     string UserEncryptPubkey       = 5;
     RoleV0 UserRole                = 6;
     int64  LastUpdate              = 7;
-    int64  Epoch                   = 8;
+    int64  HighestHeight           = 8;
     string HighestBlockId          = 9;
     Block  GenesisBlock            = 10;
     GroupEncryptType EncryptType   = 11;
