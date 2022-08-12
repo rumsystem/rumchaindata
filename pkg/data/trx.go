@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -134,7 +135,7 @@ func VerifyTrx(trx *quorumpb.Trx) (bool, error) {
 			r := ks.EthVerifySign(hash, trx.SenderSign, sigpubkey)
 			if r == true {
 				addressfrompubkey := ethcrypto.PubkeyToAddress(*sigpubkey).Hex()
-				if addressfrompubkey == trx.SenderPubkey {
+				if strings.ToLower(addressfrompubkey) == strings.ToLower(trx.SenderPubkey) {
 					return true, nil
 				} else {
 					return false, fmt.Errorf("sig not match with the 0x address")
