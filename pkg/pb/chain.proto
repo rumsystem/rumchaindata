@@ -69,22 +69,23 @@ message Trx {
 }
 
 message Witness {
-    repeated bytes TrxHash = 1;
-    string WitnessPubkey   = 2;
-    bytes  Signature       = 3;    	
+    string   groupId         = 1;
+    int64    epoch           = 2;
+    repeated bytes TrxHash   = 3;
+    string   WitnessPubkey   = 4;
+    bytes    Signature       = 5;
 }
 
 message Block {
-    string   BlockId              = 1;
-    string   GroupId              = 2;
-    string   PrevBlockId          = 3;       
-    bytes    PreviousHash         = 4;   
-    repeated Trx Trxs             = 5; 
-    repeated Witness Witesses     = 6; 
-    bytes    Hash                 = 7;          
-    string   BookkeepingPubkey    = 8;   
-    bytes    BookkeepingSignature = 9;
-    int64    TimeStamp            = 10; 
+    string   GroupId              = 1;       
+    int64    Epoch                = 2;  
+    bytes    PrevHash             = 3;
+    repeated Trx Trxs             = 4; 
+    bytes    Hash                 = 5;  
+    repeated Witness Witesses     = 6;         
+    string   BookkeepingPubkey    = 7;   
+    bytes    BookkeepingSignature = 8;
+    int64    TimeStamp            = 9; 
 }
 
 message Snapshot {

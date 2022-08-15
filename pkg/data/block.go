@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
@@ -16,16 +15,20 @@ import (
 	"time"
 )
 
-func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
+//deep copy trx by the protobuf. quorumpb.Trx is a protobuf defined struct.
+// block hash include the following items
+// - Epoch
+// - GroupId
+// - PrevHash
+// - all trxs
+// - after add withness info, get hash again, sigh this hash with bookkeeping private key
+
+func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
-	blockId := guuid.New()
 
-	//deep copy trx by the protobuf. quorumpb.Trx is a protobuf defined struct.
-
-	newBlock.BlockId = blockId.String()
+	newBlock.Epoch = epoch
 	newBlock.GroupId = oldBlock.GroupId
-	newBlock.PrevBlockId = oldBlock.BlockId
-	newBlock.PreviousHash = oldBlock.Hash
+	newBlock.PrevHash = oldBlock.Hash
 	for _, trx := range trxs {
 		trxclone := &quorumpb.Trx{}
 		clonedtrxbuff, err := proto.Marshal(trx)
@@ -36,8 +39,6 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPu
 		}
 		newBlock.Trxs = append(newBlock.Trxs, trxclone)
 	}
-	newBlock.Witesses = withnesses
-	newBlock.TimeStamp = time.Now().UnixNano()
 
 	bbytes, err := proto.Marshal(&newBlock)
 
@@ -48,13 +49,17 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPu
 	hash := localcrypto.Hash(bbytes)
 	newBlock.Hash = hash
 
+	//add withnesses and calcualte hash again
+	newBlock.Witesses = withnesses
+	newBlock.TimeStamp = time.Now().UnixNano()
 	newBlock.BookkeepingPubkey = groupPublicKey
 
+	witnessB, err := proto.Marshal(&newBlock)
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, hash, opts...)
+		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, witnessB, opts...)
 	} else {
-		signature, err = keystore.EthSignByKeyAlias(keyalias, hash, opts...)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, witnessB, opts...)
 	}
 
 	if err != nil {
@@ -71,14 +76,12 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPu
 
 func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
 	var genesisBlock quorumpb.Block
-	genesisBlock.BlockId = guuid.New().String()
+	genesisBlock.Epoch = 0
 	genesisBlock.GroupId = groupId
-	genesisBlock.PrevBlockId = ""
-	genesisBlock.PreviousHash = nil
+	genesisBlock.PrevHash = nil
 	genesisBlock.TimeStamp = time.Now().UnixNano()
 	genesisBlock.BookkeepingPubkey = groupPublicKey
 	genesisBlock.Trxs = nil
-
 	withnesses := &quorumpb.Witness{}
 	genesisBlock.Witesses = append(genesisBlock.Witesses, withnesses)
 
@@ -167,12 +170,12 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 		return false, errors.New("Hash for new block is invalid")
 	}
 
-	if res := bytes.Compare(newBlock.PreviousHash, oldBlock.Hash); res != 0 {
+	if res := bytes.Compare(newBlock.Hash, oldBlock.Hash); res != 0 {
 		return false, errors.New("PreviousHash mismatch")
 	}
 
-	if newBlock.PrevBlockId != oldBlock.BlockId {
-		return false, errors.New("Previous BlockId mismatch")
+	if newBlock.Epoch != oldBlock.Epoch+1 {
+		return false, errors.New("Previous epoch mismatch")
 	}
 
 	// check withness
