@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
+func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 	blockId := guuid.New()
 
@@ -48,6 +48,8 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, withnes
 	hash := localcrypto.Hash(bbytes)
 	newBlock.Hash = hash
 
+	newBlock.BookkeepingPubkey = groupPublicKey
+
 	var signature []byte
 	if keyalias == "" {
 		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, hash, opts...)
@@ -60,9 +62,9 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, withnes
 	}
 
 	if len(signature) == 0 {
-		return nil, errors.New("create signature on genesisblock failed")
+		return nil, errors.New("create signature failed")
 	}
-	newBlock.Signature = signature
+	newBlock.BookkeepingSignature = signature
 
 	return &newBlock, nil
 }
@@ -74,8 +76,12 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	genesisBlock.PrevBlockId = ""
 	genesisBlock.PreviousHash = nil
 	genesisBlock.TimeStamp = time.Now().UnixNano()
-	genesisBlock.ProducerPubKey = groupPublicKey
+	genesisBlock.BookkeepingPubkey = groupPublicKey
 	genesisBlock.Trxs = nil
+
+	withnesses := &quorumpb.Witness{}
+	genesisBlock.Witesses = append(genesisBlock.Witesses, withnesses)
+
 	hash, err := BlockHash(&genesisBlock)
 	if err != nil {
 		return nil, err
@@ -94,7 +100,7 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	if len(signature) == 0 {
 		return nil, errors.New("create signature on genesisblock failed")
 	}
-	genesisBlock.Signature = signature
+	genesisBlock.BookkeepingSignature = signature
 
 	return &genesisBlock, nil
 }
@@ -112,7 +118,7 @@ func BlockHash(block *quorumpb.Block) ([]byte, error) {
 		return nil, err
 	}
 	blockWithoutHash.Hash = nil
-	blockWithoutHash.Signature = nil
+	blockWithoutHash.BookkeepingSignature = nil
 
 	bbytes, err := proto.Marshal(blockWithoutHash)
 	if err != nil {
@@ -128,18 +134,18 @@ func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	bytespubkey, err := base64.RawURLEncoding.DecodeString(block.ProducerPubKey)
+	bytespubkey, err := base64.RawURLEncoding.DecodeString(block.BookkeepingPubkey)
 	if err == nil { //try eth key
 		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
 		if err == nil {
 			ks := localcrypto.GetKeystore()
-			r := ks.EthVerifySign(hash, block.Signature, ethpubkey)
+			r := ks.EthVerifySign(hash, block.GetBookkeepingSignature(), ethpubkey)
 			return r, nil
 		}
 	}
 
 	//libp2p key for backward campatibility
-	serializedpub, err := p2pcrypto.ConfigDecodeKey(block.ProducerPubKey)
+	serializedpub, err := p2pcrypto.ConfigDecodeKey(block.BookkeepingPubkey)
 	if err != nil {
 		return false, err
 	}
@@ -148,7 +154,7 @@ func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return pubkey.Verify(hash, block.Signature)
+	return pubkey.Verify(hash, block.BookkeepingSignature)
 }
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
@@ -168,6 +174,11 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 	if newBlock.PrevBlockId != oldBlock.BlockId {
 		return false, errors.New("Previous BlockId mismatch")
 	}
+
+	// check withness
+	// 1. calculate hash for []trxs in block, compare with hash in withness
+	// 2. check withness signature by using withness pubkey
+
 	return VerifyBlockSign(newBlock)
 }
 
