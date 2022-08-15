@@ -3,6 +3,7 @@ package data
 import (
 	"encoding/binary"
 	"errors"
+
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
 	"google.golang.org/protobuf/proto"
 )
@@ -93,7 +94,7 @@ func (factory *TrxFactory) GetReqBlockRespTrx(keyalias string, requester string,
 	reqBlockRespItem.ProviderPubkey = factory.groupItem.UserSignPubkey
 	reqBlockRespItem.RequesterPubkey = requester
 	reqBlockRespItem.GroupId = block.GroupId
-	reqBlockRespItem.BlockId = block.BlockId
+	reqBlockRespItem.Epoch = block.Epoch
 
 	pbBytesBlock, err := proto.Marshal(block)
 	if err != nil {
@@ -112,7 +113,7 @@ func (factory *TrxFactory) GetReqBlockRespTrx(keyalias string, requester string,
 
 func (factory *TrxFactory) GetReqBlockForwardTrx(keyalias string, block *quorumpb.Block) (*quorumpb.Trx, error) {
 	var reqBlockItem quorumpb.ReqBlock
-	reqBlockItem.BlockId = block.BlockId
+	reqBlockItem.Epoch = block.Epoch
 	reqBlockItem.GroupId = block.GroupId
 	reqBlockItem.UserId = factory.groupItem.UserSignPubkey
 
@@ -126,7 +127,7 @@ func (factory *TrxFactory) GetReqBlockForwardTrx(keyalias string, block *quorump
 
 func (factory *TrxFactory) GetReqBlockBackwardTrx(keyalias string, block *quorumpb.Block) (*quorumpb.Trx, error) {
 	var reqBlockItem quorumpb.ReqBlock
-	reqBlockItem.BlockId = block.BlockId
+	reqBlockItem.Epoch = block.Epoch
 	reqBlockItem.GroupId = block.GroupId
 	reqBlockItem.UserId = factory.groupItem.UserSignPubkey
 

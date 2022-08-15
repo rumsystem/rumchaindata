@@ -99,7 +99,7 @@ message Snapshot {
     bytes    Singature                  = 8;
     int64    TimeStamp                  = 9;
     int64    HighestHeight              = 10;
-    string   HighestBlockId             = 11;
+    int64    Epoch                      = 11;
     bytes    ItemsHash                  = 12;
 }
 
@@ -120,7 +120,7 @@ enum SnapShotItemType {
 message SnapShotTag {
     int64  TimeStamp                  = 1;
     int64  HighestHeight              = 2;
-    string HighestBlockId             = 3;
+    int64  Epoch                      = 3;
     bytes  ItemsHash                  = 4;
     int64  Nonce                      = 5;   
     string SnapshotPackageId          = 6;
@@ -128,15 +128,15 @@ message SnapShotTag {
 }
 
 message BlockDbChunk {
-    string   BlockId           = 1;
+    int64    Epoch             = 1;
     Block    BlockItem         = 2;
     string   ParentBlockId     = 3;
     repeated string SubBlockId = 4;
-    int64    Height            = 6;
+    int64    Height            = 5;
 }
 
 message ReqBlock {
-    string BlockId = 1; //block id
+    int64  Epoch   = 1; //epoch
     string GroupId = 2; //group id
     string UserId  = 3; //requester
 }
@@ -175,7 +175,7 @@ message ReqBlockResp {
     string       ProviderPubkey  = 2;
     string       RequesterPubkey = 3;
     string       GroupId         = 4;  
-    string       BlockId         = 5;    
+    int64        epoch           = 5; 
     bytes        Block           = 6;
 }
 
@@ -250,12 +250,11 @@ message GroupItem {
     string UserEncryptPubkey       = 5;
     int64  LastUpdate              = 6;
     int64  Epoch                   = 7;
-    string HighestBlockId          = 8;
-    Block  GenesisBlock            = 9;
-    GroupEncryptType EncryptType   = 10;
-    GroupConsenseType ConsenseType = 11;
-    string CipherKey               = 12;
-    string AppKey                  = 13;
+    Block  GenesisBlock            = 8;
+    GroupEncryptType EncryptType   = 9;
+    GroupConsenseType ConsenseType = 10;
+    string CipherKey               = 11;
+    string AppKey                  = 12;
 }
 
 enum RoleV0 {
@@ -343,23 +342,23 @@ message PSPing {
 }
 
 message GroupSeed {
-    Block  GenesisBlock = 1;
-    string GroupId  = 2;
-    string GroupName = 3;
-    string OwnerPubkey = 4;
+    Block  GenesisBlock   = 1;
+    string GroupId        = 2;
+    string GroupName      = 3;
+    string OwnerPubkey    = 4;
     string ConsensusType  = 5;
     string EncryptionType = 6;
-    string CipherKey = 7;
-    string AppKey = 8;
-    string Signature = 9;
+    string CipherKey      = 7;
+    string AppKey         = 8;
+    string Signature      = 9;
 }
 
 message NodeSDKGroupItem {
-    GroupItem Group         = 1;
-    string   EncryptAlias   = 2;
-    string   SignAlias      = 3;
-    repeated string ApiUrl  = 4;
-    string   GroupSeed      = 5;
+    GroupItem Group          = 1;
+    string    EncryptAlias   = 2;
+    string    SignAlias      = 3;
+    repeated  string ApiUrl  = 4;
+    string    GroupSeed      = 5;
 }
 
 enum HBBMsgType {
