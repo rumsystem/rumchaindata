@@ -127,14 +127,6 @@ message SnapShotTag {
     string SenderPubkey               = 7;
 }
 
-message BlockDbChunk {
-    int64    Epoch             = 1;
-    Block    BlockItem         = 2;
-    string   ParentBlockId     = 3;
-    repeated string SubBlockId = 4;
-    int64    Height            = 5;
-}
-
 message ReqBlock {
     int64  Epoch   = 1; //epoch
     string GroupId = 2; //group id
