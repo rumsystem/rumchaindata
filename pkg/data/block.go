@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	guuid "github.com/google/uuid"
 	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
 	"google.golang.org/protobuf/proto"
+
 	//"strings"
 	"time"
 )
 
-func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPublicKey string, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
+func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 	blockId := guuid.New()
 
@@ -34,7 +36,7 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, trxs []*quorumpb.Trx, groupPu
 		}
 		newBlock.Trxs = append(newBlock.Trxs, trxclone)
 	}
-	newBlock.ProducerPubKey = groupPublicKey
+	newBlock.Witesses = withnesses
 	newBlock.TimeStamp = time.Now().UnixNano()
 
 	bbytes, err := proto.Marshal(&newBlock)

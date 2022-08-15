@@ -75,14 +75,16 @@ message Witness {
 }
 
 message Block {
-    string   BlockId          = 1;
-    string   GroupId          = 2;
-    bytes    Hash             = 3;   
-    string   PrevBlockId      = 4;       
-    bytes    PreviousHash     = 5;   
-    repeated Trx Trxs         = 6; 
-    repeated Witness Witesses = 7; 
-    int64    TimeStamp        = 8; 
+    string   BlockId              = 1;
+    string   GroupId              = 2;
+    string   PrevBlockId          = 3;       
+    bytes    PreviousHash         = 4;   
+    repeated Trx Trxs             = 5; 
+    repeated Witness Witesses     = 6; 
+    bytes    Hash                 = 7;          
+    string   BookkeepingPubkey    = 8;   
+    bytes    BookkeepingSignature = 9;
+    int64    TimeStamp            = 10; 
 }
 
 message Snapshot {
