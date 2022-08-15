@@ -412,7 +412,7 @@ message AgreementMsg {
     string            ProposerId = 2;
     string            SenderId   = 3;
     int64             Epoch      = 4;
-    bytes             Payload    = 5;
+    bytes              Payload    = 5;
 }
 
 message Bval {
