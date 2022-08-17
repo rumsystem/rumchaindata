@@ -68,12 +68,12 @@ message Trx {
     TrxStroageType StorageType = 12;
 }
 
-message Witness {
-    string   groupId         = 1;
-    int64    epoch           = 2;
-    repeated bytes TrxHash   = 3;
-    string   WitnessPubkey   = 4;
-    bytes    Signature       = 5;
+message Witnesses {
+    string   groupId       = 1;
+    int64    epoch         = 2;
+    bytes    TrxHash       = 3;
+    string   WitnessPubkey = 4;
+    bytes    Signature     = 5;
 }
 
 message Block {
@@ -82,7 +82,7 @@ message Block {
     bytes    PrevHash             = 3;
     repeated Trx Trxs             = 4; 
     bytes    Hash                 = 5;  
-    repeated Witness Witesses     = 6;         
+    repeated Witnesses Witesses   = 6;         
     string   BookkeepingPubkey    = 7;   
     bytes    BookkeepingSignature = 8;
     int64    TimeStamp            = 9; 

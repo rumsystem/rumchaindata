@@ -23,7 +23,7 @@ import (
 // - all trxs
 // - after add withness info, get hash again, sigh this hash with bookkeeping private key
 
-func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witness, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
+func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witnesses, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 
 	newBlock.Epoch = epoch
@@ -82,7 +82,7 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	genesisBlock.TimeStamp = time.Now().UnixNano()
 	genesisBlock.BookkeepingPubkey = groupPublicKey
 	genesisBlock.Trxs = nil
-	withnesses := &quorumpb.Witness{}
+	withnesses := &quorumpb.Witnesses{}
 	genesisBlock.Witesses = append(genesisBlock.Witesses, withnesses)
 
 	hash, err := BlockHash(&genesisBlock)
