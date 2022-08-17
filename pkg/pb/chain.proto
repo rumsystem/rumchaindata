@@ -361,7 +361,8 @@ enum HBBMsgType {
 message HBMsg {
     string      MsgId   = 1;
     HBBMsgType  MsgType = 2;
-    bytes       Payload = 3;
+    int64       Epoch   = 3;       
+    bytes       Payload = 4;
 }
 
 enum BroadcastMsgType {
@@ -378,22 +379,20 @@ message BroadcastMsg {
     bytes            Payload      = 4;
 }
 
-message Proof{
-    int64          Epoch          = 1;    
-    bytes          RootHash       = 2;
-    repeated bytes Proof          = 3;
-    int64          Index          = 4;
-    int64          Leaves         = 5;
-    string         ProposerPubkey = 6;
-    bytes          ProposerSign   = 7;
+message Proof{ 
+    bytes          RootHash       = 1;
+    repeated bytes Proof          = 2;
+    int64          Index          = 3;
+    int64          Leaves         = 4;
+    string         ProposerPubkey = 5;
+    bytes          ProposerSign   = 6;
 }
 
 message Ready {
-    int64  Epoch                = 1;    
-    bytes  RootHash             = 2;
-    string ProofProviderPubkey  = 3;
-    string ProposerPubkey       = 4;
-    bytes  ProposerSign         = 5;
+    bytes  RootHash             = 1;
+    string ProofProviderPubkey  = 2;
+    string ProposerPubkey       = 3;
+    bytes  ProposerSign         = 4;
 }
 
 enum AgreementMsgType {
