@@ -63,6 +63,7 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 
 	bbytes, err := proto.Marshal(&newBlock)
 	bookkeepingHash := localcrypto.Hash(bbytes)
+	newBlock.BookkeepingHash = bookkeepingHash
 
 	var signature []byte
 	if keyalias == "" {
@@ -98,13 +99,15 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	trxHash := localcrypto.Hash(tbytes)
 	genesisBlock.TrxHash = trxHash
 
-	genesisBlock.Witesses = nil
+	witesses := []*quorumpb.Witnesses{}
+	genesisBlock.Witesses = witesses
 	genesisBlock.TimeStamp = time.Now().UnixNano()
 	genesisBlock.BookkeepingPubkey = groupPublicKey
 
 	bbytes, err := proto.Marshal(genesisBlock)
 	bookkeepingHash := localcrypto.Hash(bbytes)
 
+	genesisBlock.BookkeepingHash = bookkeepingHash
 	var signature []byte
 	if keyalias == "" {
 		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, bookkeepingHash)
