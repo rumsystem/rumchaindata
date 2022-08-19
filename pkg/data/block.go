@@ -163,7 +163,7 @@ func BlockTrxHash(block *quorumpb.Block) ([]byte, error) {
 	return hash, nil
 }
 
-func verifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
+func VerifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
 	bookkeepingHash, err := BlockBookKeepingHash(block)
 	if err != nil {
 		return false, err
@@ -211,7 +211,7 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 		return false, errors.New("Previous epoch mismatch")
 	}
 
-	return verifyBookkeepingSign(newBlock)
+	return VerifyBookkeepingSign(newBlock)
 }
 
 //get all trx from the block list
