@@ -79,13 +79,14 @@ message Witnesses {
 message Block {
     string   GroupId              = 1;       
     int64    Epoch                = 2;  
-    bytes    PrevHash             = 3;
+    bytes    PrevTrxHash          = 3;
     repeated Trx Trxs             = 4; 
-    bytes    Hash                 = 5;  
-    repeated Witnesses Witesses   = 6;         
-    string   BookkeepingPubkey    = 7;   
-    bytes    BookkeepingSignature = 8;
-    int64    TimeStamp            = 9; 
+    bytes    TrxHash              = 5;  
+    repeated Witnesses Witesses   = 6;
+    int64    TimeStamp            = 7;     
+    bytes    BookkeepingHash      = 8;          
+    string   BookkeepingPubkey    = 9;   
+    bytes    BookkeepingSignature = 10;
 }
 
 message Snapshot {

@@ -15,20 +15,27 @@ import (
 	"time"
 )
 
-//deep copy trx by the protobuf. quorumpb.Trx is a protobuf defined struct.
-// block hash include the following items
+// Each block has 2 hashs, trxHash and bookkeepingHash
+// trxHash includes the following items
 // - Epoch
 // - GroupId
 // - PrevHash
 // - all trxs
-// - after add withness info, get hash again, sigh this hash with bookkeeping private key
+// since each round of acs between different producers will make an "agreement" which trxs to be included in this round of epoch
+// hash those info will guarantee the consensused info are correct.
+// After add
+// - withness info
+// - bookkeeping pubkey
+// - timestamp
+// get hash again, this is bookkeepingHash
+// bookkeeping node will sigh this hash with to guarantee everything in this block is bookkeeping correctly.
 
 func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb.Trx, groupPublicKey string, withnesses []*quorumpb.Witnesses, keystore localcrypto.Keystore, keyalias string, opts ...string) (*quorumpb.Block, error) {
 	var newBlock quorumpb.Block
 
 	newBlock.Epoch = epoch
 	newBlock.GroupId = oldBlock.GroupId
-	newBlock.PrevHash = oldBlock.Hash
+	newBlock.PrevTrxHash = oldBlock.TrxHash
 	for _, trx := range trxs {
 		trxclone := &quorumpb.Trx{}
 		clonedtrxbuff, err := proto.Marshal(trx)
@@ -40,26 +47,28 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 		newBlock.Trxs = append(newBlock.Trxs, trxclone)
 	}
 
-	bbytes, err := proto.Marshal(&newBlock)
+	tbytes, err := proto.Marshal(&newBlock)
 
 	if err != nil {
 		return nil, err
 	}
 
-	hash := localcrypto.Hash(bbytes)
-	newBlock.Hash = hash
+	trxHash := localcrypto.Hash(tbytes)
+	newBlock.TrxHash = trxHash
 
 	//add withnesses and calcualte hash again
 	newBlock.Witesses = withnesses
 	newBlock.TimeStamp = time.Now().UnixNano()
 	newBlock.BookkeepingPubkey = groupPublicKey
 
-	witnessB, err := proto.Marshal(&newBlock)
+	bbytes, err := proto.Marshal(&newBlock)
+	bookkeepingHash := localcrypto.Hash(bbytes)
+
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, witnessB, opts...)
+		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, bookkeepingHash, opts...)
 	} else {
-		signature, err = keystore.EthSignByKeyAlias(keyalias, witnessB, opts...)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, bookkeepingHash, opts...)
 	}
 
 	if err != nil {
@@ -75,27 +84,32 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 }
 
 func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore localcrypto.Keystore, keyalias string) (*quorumpb.Block, error) {
-	var genesisBlock quorumpb.Block
+	genesisBlock := &quorumpb.Block{}
 	genesisBlock.Epoch = 0
 	genesisBlock.GroupId = groupId
-	genesisBlock.PrevHash = nil
-	genesisBlock.TimeStamp = time.Now().UnixNano()
-	genesisBlock.BookkeepingPubkey = groupPublicKey
+	genesisBlock.PrevTrxHash = nil
 	genesisBlock.Trxs = nil
-	withnesses := &quorumpb.Witnesses{}
-	genesisBlock.Witesses = append(genesisBlock.Witesses, withnesses)
 
-	hash, err := BlockHash(&genesisBlock)
+	tbytes, err := proto.Marshal(genesisBlock)
 	if err != nil {
 		return nil, err
 	}
-	genesisBlock.Hash = hash
+
+	trxHash := localcrypto.Hash(tbytes)
+	genesisBlock.TrxHash = trxHash
+
+	genesisBlock.Witesses = nil
+	genesisBlock.TimeStamp = time.Now().UnixNano()
+	genesisBlock.BookkeepingPubkey = groupPublicKey
+
+	bbytes, err := proto.Marshal(genesisBlock)
+	bookkeepingHash := localcrypto.Hash(bbytes)
 
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, hash)
+		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, bookkeepingHash)
 	} else {
-		signature, err = keystore.EthSignByKeyAlias(keyalias, hash)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, bookkeepingHash)
 	}
 	if err != nil {
 		return nil, err
@@ -105,10 +119,10 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	}
 	genesisBlock.BookkeepingSignature = signature
 
-	return &genesisBlock, nil
+	return genesisBlock, nil
 }
 
-func BlockHash(block *quorumpb.Block) ([]byte, error) {
+func blockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
 	clonedblockbuff, err := proto.Marshal(block)
 	if err != nil {
 		return nil, err
@@ -120,7 +134,8 @@ func BlockHash(block *quorumpb.Block) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	blockWithoutHash.Hash = nil
+
+	blockWithoutHash.BookkeepingHash = nil
 	blockWithoutHash.BookkeepingSignature = nil
 
 	bbytes, err := proto.Marshal(blockWithoutHash)
@@ -132,17 +147,34 @@ func BlockHash(block *quorumpb.Block) ([]byte, error) {
 	return hash, nil
 }
 
-func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
-	hash, err := BlockHash(block)
+func blockTrxHash(block *quorumpb.Block) ([]byte, error) {
+	blockWithoutHash := &quorumpb.Block{
+		GroupId:     block.GroupId,
+		Epoch:       block.Epoch,
+		PrevTrxHash: block.PrevTrxHash,
+		Trxs:        block.Trxs,
+	}
+
+	tbytes, err := proto.Marshal(blockWithoutHash)
+	if err != nil {
+		return nil, err
+	}
+	hash := localcrypto.Hash(tbytes)
+	return hash, nil
+}
+
+func verifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
+	bookkeepingHash, err := blockBookKeepingHash(block)
 	if err != nil {
 		return false, err
 	}
+
 	bytespubkey, err := base64.RawURLEncoding.DecodeString(block.BookkeepingPubkey)
 	if err == nil { //try eth key
 		ethpubkey, err := ethcrypto.DecompressPubkey(bytespubkey)
 		if err == nil {
 			ks := localcrypto.GetKeystore()
-			r := ks.EthVerifySign(hash, block.GetBookkeepingSignature(), ethpubkey)
+			r := ks.EthVerifySign(bookkeepingHash, block.GetBookkeepingSignature(), ethpubkey)
 			return r, nil
 		}
 	}
@@ -157,20 +189,21 @@ func VerifyBlockSign(block *quorumpb.Block) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return pubkey.Verify(hash, block.BookkeepingSignature)
+	return pubkey.Verify(bookkeepingHash, block.BookkeepingSignature)
 }
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
-	hash, err := BlockHash(newBlock)
+
+	trxHash, err := blockTrxHash(newBlock)
 	if err != nil {
 		return false, err
 	}
 
-	if res := bytes.Compare(hash, newBlock.Hash); res != 0 {
-		return false, errors.New("Hash for new block is invalid")
+	if res := bytes.Compare(trxHash, newBlock.TrxHash); res != 0 {
+		return false, errors.New("TrxHash for new block is invalid")
 	}
 
-	if res := bytes.Compare(newBlock.Hash, oldBlock.Hash); res != 0 {
+	if res := bytes.Compare(newBlock.PrevTrxHash, oldBlock.TrxHash); res != 0 {
 		return false, errors.New("PreviousHash mismatch")
 	}
 
@@ -178,11 +211,7 @@ func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 		return false, errors.New("Previous epoch mismatch")
 	}
 
-	// check withness
-	// 1. calculate hash for []trxs in block, compare with hash in withness
-	// 2. check withness signature by using withness pubkey
-
-	return VerifyBlockSign(newBlock)
+	return verifyBookkeepingSign(newBlock)
 }
 
 //get all trx from the block list
