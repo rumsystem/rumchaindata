@@ -122,7 +122,7 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	return genesisBlock, nil
 }
 
-func blockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
+func BlockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
 	clonedblockbuff, err := proto.Marshal(block)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func blockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
 	return hash, nil
 }
 
-func blockTrxHash(block *quorumpb.Block) ([]byte, error) {
+func BlockTrxHash(block *quorumpb.Block) ([]byte, error) {
 	blockWithoutHash := &quorumpb.Block{
 		GroupId:     block.GroupId,
 		Epoch:       block.Epoch,
@@ -164,7 +164,7 @@ func blockTrxHash(block *quorumpb.Block) ([]byte, error) {
 }
 
 func verifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
-	bookkeepingHash, err := blockBookKeepingHash(block)
+	bookkeepingHash, err := BlockBookKeepingHash(block)
 	if err != nil {
 		return false, err
 	}
@@ -194,7 +194,7 @@ func verifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 
-	trxHash, err := blockTrxHash(newBlock)
+	trxHash, err := BlockTrxHash(newBlock)
 	if err != nil {
 		return false, err
 	}
