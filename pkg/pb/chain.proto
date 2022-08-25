@@ -81,10 +81,10 @@ message Block {
     int64    Epoch                = 2;  
     bytes    PrevTrxHash          = 3;
     repeated Trx Trxs             = 4; 
-    bytes    TrxHash              = 5;  
+    bytes    EpochHas             = 5; 
     repeated Witnesses Witesses   = 6;
     int64    TimeStamp            = 7;     
-    bytes    BookkeepingHash      = 8;          
+    bytes    BlockHash            = 8;
     string   BookkeepingPubkey    = 9;   
     bytes    BookkeepingSignature = 10;
 }
