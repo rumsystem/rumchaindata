@@ -35,7 +35,7 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 
 	newBlock.Epoch = epoch
 	newBlock.GroupId = oldBlock.GroupId
-	newBlock.PrevTrxHash = oldBlock.TrxHash
+	newBlock.PrevEpochHash = oldBlock.EpochHash
 	for _, trx := range trxs {
 		trxclone := &quorumpb.Trx{}
 		clonedtrxbuff, err := proto.Marshal(trx)
@@ -53,8 +53,8 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 		return nil, err
 	}
 
-	trxHash := localcrypto.Hash(tbytes)
-	newBlock.TrxHash = trxHash
+	epochHash := localcrypto.Hash(tbytes)
+	newBlock.EpochHash = epochHash
 
 	//add withnesses and calcualte hash again
 	newBlock.Witesses = withnesses
@@ -62,14 +62,14 @@ func CreateBlockByEthKey(oldBlock *quorumpb.Block, epoch int64, trxs []*quorumpb
 	newBlock.BookkeepingPubkey = groupPublicKey
 
 	bbytes, err := proto.Marshal(&newBlock)
-	bookkeepingHash := localcrypto.Hash(bbytes)
-	newBlock.BookkeepingHash = bookkeepingHash
+	blockHash := localcrypto.Hash(bbytes)
+	newBlock.BlockHash = blockHash
 
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, bookkeepingHash, opts...)
+		signature, err = keystore.EthSignByKeyName(newBlock.GroupId, blockHash, opts...)
 	} else {
-		signature, err = keystore.EthSignByKeyAlias(keyalias, bookkeepingHash, opts...)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, blockHash, opts...)
 	}
 
 	if err != nil {
@@ -88,7 +88,7 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	genesisBlock := &quorumpb.Block{}
 	genesisBlock.Epoch = 0
 	genesisBlock.GroupId = groupId
-	genesisBlock.PrevTrxHash = nil
+	genesisBlock.PrevEpochHash = nil
 	genesisBlock.Trxs = nil
 
 	tbytes, err := proto.Marshal(genesisBlock)
@@ -96,8 +96,8 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 		return nil, err
 	}
 
-	trxHash := localcrypto.Hash(tbytes)
-	genesisBlock.TrxHash = trxHash
+	epochHash := localcrypto.Hash(tbytes)
+	genesisBlock.EpochHash = epochHash
 
 	witesses := []*quorumpb.Witnesses{}
 	genesisBlock.Witesses = witesses
@@ -105,14 +105,14 @@ func CreateGenesisBlockByEthKey(groupId string, groupPublicKey string, keystore 
 	genesisBlock.BookkeepingPubkey = groupPublicKey
 
 	bbytes, err := proto.Marshal(genesisBlock)
-	bookkeepingHash := localcrypto.Hash(bbytes)
+	blockHash := localcrypto.Hash(bbytes)
 
-	genesisBlock.BookkeepingHash = bookkeepingHash
+	genesisBlock.BlockHash = blockHash
 	var signature []byte
 	if keyalias == "" {
-		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, bookkeepingHash)
+		signature, err = keystore.EthSignByKeyName(genesisBlock.GroupId, blockHash)
 	} else {
-		signature, err = keystore.EthSignByKeyAlias(keyalias, bookkeepingHash)
+		signature, err = keystore.EthSignByKeyAlias(keyalias, blockHash)
 	}
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func BlockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
 		return nil, err
 	}
 
-	blockWithoutHash.BookkeepingHash = nil
+	blockWithoutHash.BlockHash = nil
 	blockWithoutHash.BookkeepingSignature = nil
 
 	bbytes, err := proto.Marshal(blockWithoutHash)
@@ -150,12 +150,12 @@ func BlockBookKeepingHash(block *quorumpb.Block) ([]byte, error) {
 	return hash, nil
 }
 
-func BlockTrxHash(block *quorumpb.Block) ([]byte, error) {
+func BlockEpochHash(block *quorumpb.Block) ([]byte, error) {
 	blockWithoutHash := &quorumpb.Block{
-		GroupId:     block.GroupId,
-		Epoch:       block.Epoch,
-		PrevTrxHash: block.PrevTrxHash,
-		Trxs:        block.Trxs,
+		GroupId:       block.GroupId,
+		Epoch:         block.Epoch,
+		PrevEpochHash: block.PrevEpochHash,
+		Trxs:          block.Trxs,
 	}
 
 	tbytes, err := proto.Marshal(blockWithoutHash)
@@ -197,16 +197,16 @@ func VerifyBookkeepingSign(block *quorumpb.Block) (bool, error) {
 
 func IsBlockValid(newBlock, oldBlock *quorumpb.Block) (bool, error) {
 
-	trxHash, err := BlockTrxHash(newBlock)
+	epochHash, err := BlockEpochHash(newBlock)
 	if err != nil {
 		return false, err
 	}
 
-	if res := bytes.Compare(trxHash, newBlock.TrxHash); res != 0 {
+	if res := bytes.Compare(epochHash, newBlock.EpochHash); res != 0 {
 		return false, errors.New("TrxHash for new block is invalid")
 	}
 
-	if res := bytes.Compare(newBlock.PrevTrxHash, oldBlock.TrxHash); res != 0 {
+	if res := bytes.Compare(newBlock.PrevEpochHash, oldBlock.EpochHash); res != 0 {
 		return false, errors.New("PreviousHash mismatch")
 	}
 

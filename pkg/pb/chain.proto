@@ -79,9 +79,9 @@ message Witnesses {
 message Block {
     string   GroupId              = 1;       
     int64    Epoch                = 2;  
-    bytes    PrevTrxHash          = 3;
+    bytes    PrevEpochHash        = 3;
     repeated Trx Trxs             = 4; 
-    bytes    EpochHas             = 5; 
+    bytes    EpochHash            = 5; 
     repeated Witnesses Witesses   = 6;
     int64    TimeStamp            = 7;     
     bytes    BlockHash            = 8;
