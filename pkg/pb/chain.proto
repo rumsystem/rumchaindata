@@ -186,8 +186,12 @@ message ProducerItem {
    string     GroupOwnerSign      = 4;
    int64      TimeStamp           = 5;    
    ActionType Action              = 6;
-   int64      BlockProduced       = 7;
+   int64      WithnessBlockNum    = 7;
    string     Memo                = 8;
+}
+
+message BFTProducerBundleItem {
+    repeated ProducerItem Producers = 1;
 }
 
 message UserItem {

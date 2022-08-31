@@ -54,7 +54,7 @@ func (factory *TrxFactory) GetChainConfigTrx(keyalias string, item *quorumpb.Cha
 	return factory.CreateTrxByEthKey(quorumpb.TrxType_CHAIN_CONFIG, encodedcontent, keyalias)
 }
 
-func (factory *TrxFactory) GetRegProducerTrx(keyalias string, item *quorumpb.ProducerItem) (*quorumpb.Trx, error) {
+func (factory *TrxFactory) GetRegProducerBundleTrx(keyalias string, item *quorumpb.BFTProducerBundleItem) (*quorumpb.Trx, error) {
 	encodedcontent, err := proto.Marshal(item)
 	if err != nil {
 		return nil, err
