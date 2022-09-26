@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
-	p2pcrypto "github.com/libp2p/go-libp2p-core/crypto"
+	p2pcrypto "github.com/libp2p/go-libp2p/core/crypto"
 	localcrypto "github.com/rumsystem/keystore/pkg/crypto"
 	quorumpb "github.com/rumsystem/rumchaindata/pkg/pb"
 	"google.golang.org/protobuf/proto"

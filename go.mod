@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/ethereum/go-ethereum v1.10.17
 	github.com/google/uuid v1.3.0
-	github.com/libp2p/go-libp2p-core v0.15.1
 	github.com/rumsystem/keystore v0.0.0-20220725160135-7a6fb482bfb4
 	google.golang.org/protobuf v1.28.0
 )
