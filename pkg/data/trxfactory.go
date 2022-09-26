@@ -125,6 +125,20 @@ func (factory *TrxFactory) GetReqBlockForwardTrx(keyalias string, block *quorump
 	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_FORWARD, int64(0), bItemBytes, keyalias)
 }
 
+func (factory *TrxFactory) GetReqBlockForwardTrxWithEpoch(keyalias string, epoch int64, groupId string) (*quorumpb.Trx, error) {
+	var reqBlockItem quorumpb.ReqBlock
+	reqBlockItem.Epoch = epoch
+	reqBlockItem.GroupId = groupId
+	reqBlockItem.UserId = factory.groupItem.UserSignPubkey
+
+	bItemBytes, err := proto.Marshal(&reqBlockItem)
+	if err != nil {
+		return nil, err
+	}
+
+	return CreateTrxByEthKey(factory.nodename, factory.version, factory.groupItem, quorumpb.TrxType_REQ_BLOCK_FORWARD, int64(0), bItemBytes, keyalias)
+}
+
 func (factory *TrxFactory) GetReqBlockBackwardTrx(keyalias string, block *quorumpb.Block) (*quorumpb.Trx, error) {
 	var reqBlockItem quorumpb.ReqBlock
 	reqBlockItem.Epoch = block.Epoch
